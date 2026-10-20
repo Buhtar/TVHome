@@ -25,7 +25,6 @@ import android.widget.TextView;
 
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
@@ -37,12 +36,12 @@ import java.util.Locale;
 
 public class MainActivity extends Activity implements TileAdapter.Listener {
 
-    // Точные имена пакетов для дока
+    // Используем частичные имена для надежности
     private static final String[] DOCK_PACKAGE_MATCH = {
             "org.smarttube.stable",
             "com.vk.tv",
-            "io.github.romanvht.byedpi",
-            "ru.kinopoisk.yandex.tv"
+            "byedpi",
+            "kinopoisk"
     };
 
     private FrameLayout root;
@@ -97,7 +96,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         setupPills();
         startClock();
 
-        // Настраиваем скругление хайлайта
         highlight.setClipToOutline(true);
         highlight.setOutlineProvider(new ViewOutlineProvider() {
             @Override
@@ -133,9 +131,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         super.onPause();
         try {
             unregisterReceiver(packageReceiver);
-        } catch (IllegalArgumentException e) {
-            // ignore
-        }
+        } catch (IllegalArgumentException e) { }
     }
 
     private void applyFonts() {
@@ -168,12 +164,13 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         }
 
         dockApps.clear();
+        // Теперь используем contains для надежного поиска
         for (String want : DOCK_PACKAGE_MATCH) {
             AppInfo found = null;
             for (ResolveInfo r : all) {
-                String pkg = r.activityInfo.packageName;
+                String pkg = r.activityInfo.packageName.toLowerCase(Locale.ROOT);
                 if (pkg.equals(getPackageName())) continue;
-                if (pkg.equalsIgnoreCase(want)) {
+                if (pkg.contains(want.toLowerCase(Locale.ROOT))) {
                     found = mk(pm, r);
                     break;
                 }
@@ -191,7 +188,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             if (pkg.contains("settings")) continue;
             if (isInDock(pkg)) continue;
             
-            // Скрываем приложения без иконки (пазл) и системный мусор
             if (r.activityInfo.getIconResource() == 0) continue;
             if (label.equalsIgnoreCase("com.android.documentsui") || 
                 label.equalsIgnoreCase("Shell") || 
@@ -210,7 +206,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     }
 
     private boolean isInDock(String pkg) {
-        for (AppInfo a : dockApps) if (a.packageName.equals(pkg)) return true;
+        for (AppInfo a : dockApps) if (a.packageName.equalsIgnoreCase(pkg)) return true;
         return false;
     }
 
@@ -220,7 +216,8 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     }
 
     private void setupDock() {
-        dockRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        // ИЗМЕНЕНО: используем GridLayoutManager на 4 колонки, чтобы приложения не листались
+        dockRecycler.setLayoutManager(new GridLayoutManager(this, 4));
         dockRecycler.setAdapter(new TileAdapter(this, dockApps, true, this));
     }
 
