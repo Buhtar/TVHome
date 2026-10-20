@@ -335,4 +335,3 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
 
     @Override protected void onDestroy() { super.onDestroy(); handler.removeCallbacksAndMessages(null); }
 }
-}
