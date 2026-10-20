@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Outline;
 import android.graphics.Typeface;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -16,6 +17,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.view.WindowManager;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
@@ -36,7 +38,7 @@ import java.util.Locale;
 public class MainActivity extends Activity implements TileAdapter.Listener {
 
     // Точные имена пакетов для дока
-       private static final String[] DOCK_PACKAGE_MATCH = {
+    private static final String[] DOCK_PACKAGE_MATCH = {
             "org.smarttube.stable",
             "com.vk.tv",
             "io.github.romanvht.byedpi",
@@ -57,7 +59,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     private SharedPreferences prefs;
     private int lastGridPos = -1;
 
-    // Слушатель установки/удаления приложений
     private BroadcastReceiver packageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -95,6 +96,15 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         setupDock();
         setupPills();
         startClock();
+
+        // Настраиваем скругление хайлайта
+        highlight.setClipToOutline(true);
+        highlight.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(16));
+            }
+        });
 
         gridRecycler.post(() -> {
             int pos = prefs.getInt("last_grid_pos", 0);
@@ -158,15 +168,14 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         }
 
         dockApps.clear();
-        // Ищем приложения для дока по точному имени пакета
         for (String want : DOCK_PACKAGE_MATCH) {
             AppInfo found = null;
             for (ResolveInfo r : all) {
                 String pkg = r.activityInfo.packageName;
                 if (pkg.equals(getPackageName())) continue;
-                if (pkg.equalsIgnoreCase(want)) { 
-                    found = mk(pm, r); 
-                    break; 
+                if (pkg.equalsIgnoreCase(want)) {
+                    found = mk(pm, r);
+                    break;
                 }
             }
             if (found != null) dockApps.add(found);
@@ -179,12 +188,11 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             
             if (pkg.equals(getPackageName())) continue;
             if (pkg.equals("com.example.user.myapplication")) continue;
-            if (pkg.contains("settings")) continue; // скрываем системные настройки
+            if (pkg.contains("settings")) continue;
             if (isInDock(pkg)) continue;
             
-            // Скрываем пустые/системные приложения (робот, пазл)
-                      // Скрываем приложения без иконки (пазл) и системный мусор
-            if (r.activityInfo.getIconResource() == 0) continue; 
+            // Скрываем приложения без иконки (пазл) и системный мусор
+            if (r.activityInfo.getIconResource() == 0) continue;
             if (label.equalsIgnoreCase("com.android.documentsui") || 
                 label.equalsIgnoreCase("Shell") || 
                 label.equalsIgnoreCase("Package installer") ||
@@ -320,18 +328,8 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         if (g != null) g.requestFocus();
     }
 
-        private void moveHighlight(View tile) {
+    private void moveHighlight(View tile) {
         if (tile == null) return;
-        
-        // Задаем скругление через OutlineProvider, чтобы углы не искажались при масштабировании
-        highlight.setClipToOutline(true);
-        highlight.setOutlineProvider(new android.view.ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, android.graphics.Outline outline) {
-                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(16));
-            }
-        });
-
         int[] tp = new int[2]; tile.getLocationInWindow(tp);
         int[] rp = new int[2]; root.getLocationInWindow(rp);
         float targetX = tp[0] - rp[0] - dp(6);
@@ -358,7 +356,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
                     .setInterpolator(new OvershootInterpolator(1.4f))
                     .setDuration(200).start();
         }
-    }
     }
 
     private int dp(int v) { return (int) (v * getResources().getDisplayMetrics().density); }
