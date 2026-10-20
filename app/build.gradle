@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 android {
     namespace 'com.tvhome.launcher'
-    compileSdk 33
+    compileSdk 34
     defaultConfig {
         applicationId "com.tvhome.launcher"
         minSdk 21
