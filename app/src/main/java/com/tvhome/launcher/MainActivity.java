@@ -35,8 +35,11 @@ import java.util.Locale;
 
 public class MainActivity extends Activity implements TileAdapter.Listener {
 
-    private static final String[] DOCK_LABEL_MATCH = {
-            "youtube", "vk video", "byebyedpi", "кинопоиск"
+        private static final String[] DOCK_PACKAGE_MATCH = {
+            "org.smarttube.stable",
+            "com.vk.tv",
+            "byedpi",
+            "kinopoisk"
     };
 
     private FrameLayout root;
