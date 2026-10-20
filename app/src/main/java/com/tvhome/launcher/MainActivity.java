@@ -35,7 +35,8 @@ import java.util.Locale;
 
 public class MainActivity extends Activity implements TileAdapter.Listener {
 
-        private static final String[] DOCK_PACKAGE_MATCH = {
+    // Точные имена пакетов для дока
+    private static final String[] DOCK_PACKAGE_MATCH = {
             "org.smarttube.stable",
             "com.vk.tv",
             "byedpi",
@@ -105,7 +106,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     @Override
     protected void onResume() {
         super.onResume();
-        // Регистрируем слушатель изменений пакетов
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_PACKAGE_ADDED);
         filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
@@ -113,7 +113,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         filter.addDataScheme("package");
         registerReceiver(packageReceiver, filter);
 
-        // На всякий случай обновляем список при возврате на экран
         loadApps();
         if (gridRecycler.getAdapter() != null) gridRecycler.getAdapter().notifyDataSetChanged();
         if (dockRecycler.getAdapter() != null) dockRecycler.getAdapter().notifyDataSetChanged();
@@ -159,13 +158,16 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         }
 
         dockApps.clear();
-        for (String want : DOCK_LABEL_MATCH) {
+        // Ищем приложения для дока по точному имени пакета
+        for (String want : DOCK_PACKAGE_MATCH) {
             AppInfo found = null;
             for (ResolveInfo r : all) {
                 String pkg = r.activityInfo.packageName;
-                String label = r.loadLabel(pm).toString();
                 if (pkg.equals(getPackageName())) continue;
-                if (label.toLowerCase(Locale.ROOT).contains(want)) { found = mk(pm, r); break; }
+                if (pkg.equalsIgnoreCase(want)) { 
+                    found = mk(pm, r); 
+                    break; 
+                }
             }
             if (found != null) dockApps.add(found);
         }
@@ -173,9 +175,21 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         gridApps.clear();
         for (ResolveInfo r : all) {
             String pkg = r.activityInfo.packageName;
+            String label = r.loadLabel(pm).toString();
+            
             if (pkg.equals(getPackageName())) continue;
             if (pkg.equals("com.example.user.myapplication")) continue;
+            if (pkg.contains("settings")) continue; // скрываем системные настройки
             if (isInDock(pkg)) continue;
+            
+            // Скрываем пустые/системные приложения (робот, пазл)
+            if (label.equalsIgnoreCase("com.android.documentsui") || 
+                label.equalsIgnoreCase("Shell") || 
+                label.equalsIgnoreCase("Package installer") ||
+                label.contains("Настройки")) {
+                continue;
+            }
+            
             gridApps.add(mk(pm, r));
         }
         Collections.sort(gridApps, (a, b) -> a.label.compareToIgnoreCase(b.label));
