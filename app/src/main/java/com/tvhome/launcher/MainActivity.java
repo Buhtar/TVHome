@@ -1,5 +1,6 @@
 package com.tvhome.launcher;
 
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -8,7 +9,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.Outline;
 import android.graphics.Typeface;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -17,7 +17,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.view.ViewOutlineProvider;
 import android.view.WindowManager;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
@@ -36,7 +35,6 @@ import java.util.Locale;
 
 public class MainActivity extends Activity implements TileAdapter.Listener {
 
-    // Используем частичные имена для надежности
     private static final String[] DOCK_PACKAGE_MATCH = {
             "org.smarttube.stable",
             "com.vk.tv",
@@ -95,14 +93,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         setupDock();
         setupPills();
         startClock();
-
-        highlight.setClipToOutline(true);
-        highlight.setOutlineProvider(new ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, Outline outline) {
-                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(16));
-            }
-        });
 
         gridRecycler.post(() -> {
             int pos = prefs.getInt("last_grid_pos", 0);
@@ -164,7 +154,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         }
 
         dockApps.clear();
-        // Теперь используем contains для надежного поиска
         for (String want : DOCK_PACKAGE_MATCH) {
             AppInfo found = null;
             for (ResolveInfo r : all) {
@@ -188,6 +177,8 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             if (pkg.contains("settings")) continue;
             if (isInDock(pkg)) continue;
             
+            // Фильтр пустых системных приложений (пазл)
+            if (label == null || label.trim().isEmpty()) continue;
             if (r.activityInfo.getIconResource() == 0) continue;
             if (label.equalsIgnoreCase("com.android.documentsui") || 
                 label.equalsIgnoreCase("Shell") || 
@@ -216,7 +207,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     }
 
     private void setupDock() {
-        // ИЗМЕНЕНО: используем GridLayoutManager на 4 колонки, чтобы приложения не листались
         dockRecycler.setLayoutManager(new GridLayoutManager(this, 4));
         dockRecycler.setAdapter(new TileAdapter(this, dockApps, true, this));
     }
@@ -335,10 +325,9 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         float targetH = tile.getHeight() + dp(12);
 
         highlight.setAlpha(1f);
-        highlight.setPivotX(0f);
-        highlight.setPivotY(0f);
 
-        if (highlight.getWidth() == 0) {
+        if (highlight.getWidth() <= 1) {
+            // Первичное появление
             FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) highlight.getLayoutParams();
             lp.width = (int) targetW;
             lp.height = (int) targetH;
@@ -346,12 +335,25 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             highlight.setX(targetX);
             highlight.setY(targetY);
         } else {
-            highlight.animate()
-                    .x(targetX).y(targetY)
-                    .scaleX(targetW / highlight.getWidth())
-                    .scaleY(targetH / highlight.getHeight())
-                    .setInterpolator(new OvershootInterpolator(1.4f))
-                    .setDuration(200).start();
+            // Плавное изменение размера без искажения углов
+            int startWidth = highlight.getWidth();
+            int startHeight = highlight.getHeight();
+            float startX = highlight.getX();
+            float startY = highlight.getY();
+
+            ValueAnimator anim = ValueAnimator.ofFloat(0f, 1f);
+            anim.addUpdateListener(animation -> {
+                float val = (float) animation.getAnimatedValue();
+                FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) highlight.getLayoutParams();
+                lp.width = (int) (startWidth + (targetW - startWidth) * val);
+                lp.height = (int) (startHeight + (targetH - startHeight) * val);
+                highlight.setLayoutParams(lp);
+                highlight.setX(startX + (targetX - startX) * val);
+                highlight.setY(startY + (targetY - startY) * val);
+            });
+            anim.setInterpolator(new OvershootInterpolator(1.4f));
+            anim.setDuration(200);
+            anim.start();
         }
     }
 

@@ -103,14 +103,23 @@
                 android:clipToPadding="false"
                 android:paddingHorizontal="32dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="70dp"/>
+                android:paddingBottom="16dp"/>
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="60dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="32dp">
 
             <TextView
                 android:id="@+id/focused_dock_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="16dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="12dp"
                 android:alpha="0"
                 android:shadowColor="#80448AFF"
                 android:shadowDx="0"
@@ -118,14 +127,6 @@
                 android:shadowRadius="30"
                 android:textColor="@color/text_primary"
                 android:textSize="28sp"/>
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="60dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="32dp">
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -139,7 +140,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"/>
             </FrameLayout>
-        </FrameLayout>
+        </LinearLayout>
     </LinearLayout>
 
     <View
