@@ -1,7 +1,10 @@
 package com.tvhome.launcher;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -50,6 +53,16 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     private SharedPreferences prefs;
     private int lastGridPos = -1;
 
+    // Слушатель установки/удаления приложений
+    private BroadcastReceiver packageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            loadApps();
+            if (gridRecycler.getAdapter() != null) gridRecycler.getAdapter().notifyDataSetChanged();
+            if (dockRecycler.getAdapter() != null) dockRecycler.getAdapter().notifyDataSetChanged();
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,6 +97,33 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             if (gridRecycler.getChildAt(pos) != null) gridRecycler.getChildAt(pos).requestFocus();
             else if (gridRecycler.getChildAt(0) != null) gridRecycler.getChildAt(0).requestFocus();
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Регистрируем слушатель изменений пакетов
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        filter.addAction(Intent.ACTION_PACKAGE_REPLACED);
+        filter.addDataScheme("package");
+        registerReceiver(packageReceiver, filter);
+
+        // На всякий случай обновляем список при возврате на экран
+        loadApps();
+        if (gridRecycler.getAdapter() != null) gridRecycler.getAdapter().notifyDataSetChanged();
+        if (dockRecycler.getAdapter() != null) dockRecycler.getAdapter().notifyDataSetChanged();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        try {
+            unregisterReceiver(packageReceiver);
+        } catch (IllegalArgumentException e) {
+            // ignore
+        }
     }
 
     private void applyFonts() {
@@ -294,4 +334,5 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     private int dp(int v) { return (int) (v * getResources().getDisplayMetrics().density); }
 
     @Override protected void onDestroy() { super.onDestroy(); handler.removeCallbacksAndMessages(null); }
+}
 }
