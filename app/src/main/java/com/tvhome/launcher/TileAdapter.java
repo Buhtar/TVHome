@@ -47,15 +47,32 @@ public class TileAdapter extends RecyclerView.Adapter<TileAdapter.VH> {
     public void onBindViewHolder(@NonNull VH h, int position) {
         AppInfo info = items.get(position);
         h.icon.setImageDrawable(info.icon);
-        h.label.setText(info.label);
+        
+        // Скрываем пустые названия, чтобы не было белых полосок
+        if (info.label == null || info.label.trim().isEmpty()) {
+            h.label.setVisibility(View.GONE);
+        } else {
+            h.label.setVisibility(View.VISIBLE);
+            h.label.setText(info.label);
+        }
 
         h.itemView.setOnClickListener(v -> listener.onClick(info));
+        
         h.itemView.setOnFocusChangeListener((v, hasFocus) -> {
             h.label.setAlpha(hasFocus ? 1f : 0f);
             v.animate().scaleX(hasFocus ? 1.08f : 1f).scaleY(hasFocus ? 1.08f : 1f)
                     .setDuration(180).start();
+            
+            // Вместо плавающей рамки просто меняем фон иконки
+            if (hasFocus) {
+                v.setBackgroundResource(R.drawable.highlight_bg);
+            } else {
+                v.setBackground(null);
+            }
+
             if (hasFocus) listener.onFocused(v, info, position, isDock);
         });
+        
         h.itemView.setOnKeyListener((v, keyCode, event) -> {
             if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
 

@@ -1,6 +1,5 @@
 package com.tvhome.launcher;
 
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,7 +17,6 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -45,7 +43,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     private FrameLayout root;
     private RecyclerView gridRecycler, dockRecycler;
     private TextView clock, date, greeting, focusedDockName;
-    private View highlight;
     private TextView pillInputs, pillWifi, pillSettings;
 
     private final List<AppInfo> gridApps = new ArrayList<>();
@@ -79,7 +76,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         date = findViewById(R.id.date);
         greeting = findViewById(R.id.greeting);
         focusedDockName = findViewById(R.id.focused_dock_name);
-        highlight = findViewById(R.id.highlight);
         gridRecycler = findViewById(R.id.grid);
         dockRecycler = findViewById(R.id.dock);
         pillInputs = findViewById(R.id.pill_inputs);
@@ -177,7 +173,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             if (pkg.contains("settings")) continue;
             if (isInDock(pkg)) continue;
             
-            // Фильтр пустых системных приложений (пазл)
             if (label == null || label.trim().isEmpty()) continue;
             if (r.activityInfo.getIconResource() == 0) continue;
             if (label.equalsIgnoreCase("com.android.documentsui") || 
@@ -223,7 +218,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             p.setOnFocusChangeListener((v, has) -> {
                 v.setAlpha(has ? 1f : 0.7f);
                 v.animate().scaleX(has ? 1.06f : 1f).scaleY(has ? 1.06f : 1f).setDuration(150).start();
-                if (has) highlight.setAlpha(0f);
             });
             p.setOnKeyListener((v, keyCode, event) -> {
                 if (event.getAction() != android.view.KeyEvent.ACTION_DOWN) return false;
@@ -284,7 +278,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     }
 
     @Override public void onFocused(View tile, AppInfo info, int pos, boolean isDock) {
-        moveHighlight(tile);
         if (isDock) {
             focusedDockName.setText(info.label);
             focusedDockName.setAlpha(1f);
@@ -314,50 +307,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         if (g == null) g = gridRecycler.getChildAt(0);
         if (g != null) g.requestFocus();
     }
-
-    private void moveHighlight(View tile) {
-        if (tile == null) return;
-        int[] tp = new int[2]; tile.getLocationInWindow(tp);
-        int[] rp = new int[2]; root.getLocationInWindow(rp);
-        float targetX = tp[0] - rp[0] - dp(6);
-        float targetY = tp[1] - rp[1] - dp(6);
-        float targetW = tile.getWidth() + dp(12);
-        float targetH = tile.getHeight() + dp(12);
-
-        highlight.setAlpha(1f);
-
-        if (highlight.getWidth() <= 1) {
-            // Первичное появление
-            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) highlight.getLayoutParams();
-            lp.width = (int) targetW;
-            lp.height = (int) targetH;
-            highlight.setLayoutParams(lp);
-            highlight.setX(targetX);
-            highlight.setY(targetY);
-        } else {
-            // Плавное изменение размера без искажения углов
-            int startWidth = highlight.getWidth();
-            int startHeight = highlight.getHeight();
-            float startX = highlight.getX();
-            float startY = highlight.getY();
-
-            ValueAnimator anim = ValueAnimator.ofFloat(0f, 1f);
-            anim.addUpdateListener(animation -> {
-                float val = (float) animation.getAnimatedValue();
-                FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) highlight.getLayoutParams();
-                lp.width = (int) (startWidth + (targetW - startWidth) * val);
-                lp.height = (int) (startHeight + (targetH - startHeight) * val);
-                highlight.setLayoutParams(lp);
-                highlight.setX(startX + (targetX - startX) * val);
-                highlight.setY(startY + (targetY - startY) * val);
-            });
-            anim.setInterpolator(new OvershootInterpolator(1.4f));
-            anim.setDuration(200);
-            anim.start();
-        }
-    }
-
-    private int dp(int v) { return (int) (v * getResources().getDisplayMetrics().density); }
 
     @Override protected void onDestroy() { super.onDestroy(); handler.removeCallbacksAndMessages(null); }
 }

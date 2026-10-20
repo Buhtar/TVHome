@@ -142,12 +142,4 @@
             </FrameLayout>
         </LinearLayout>
     </LinearLayout>
-
-    <View
-        android:id="@+id/highlight"
-        android:layout_width="1dp"
-        android:layout_height="1dp"
-        android:layout_gravity="top|start"
-        android:alpha="0"
-        android:background="@drawable/highlight_bg"/>
 </FrameLayout>
