@@ -36,7 +36,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     private static final String[] DOCK_PACKAGE_MATCH = {
             "org.smarttube.stable",
             "com.vk.tv",
-            "com.rupleide.netfix",
+            "com.brent.nova",
             "kinopoisk"
     };
 
