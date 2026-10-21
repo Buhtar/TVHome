@@ -94,7 +94,7 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- Сетка приложений -->
+                <!-- Сетка приложений -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -107,16 +107,15 @@
                 android:clipToPadding="false"
                 android:paddingHorizontal="40dp"
                 android:paddingTop="16dp"
-                android:paddingBottom="24dp"/>
+                android:paddingBottom="120dp"/> <!-- Увеличили отступ снизу -->
         </FrameLayout>
 
         <!-- Парящий док -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="40dp">
+            android:paddingBottom="24dp">
             
-            <!-- Обертка для центрирования дока -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -128,7 +127,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="12dp"
                     android:alpha="0"
                     android:shadowColor="#805C85FF"
                     android:shadowDx="0"
@@ -141,8 +140,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/dock_bg"
-                    android:paddingHorizontal="32dp"
-                    android:paddingVertical="16dp">
+                    android:paddingHorizontal="24dp"
+                    android:paddingVertical="8dp"> <!-- Уменьшили высоту дока -->
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/dock"
