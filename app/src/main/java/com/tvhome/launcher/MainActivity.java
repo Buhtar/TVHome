@@ -36,7 +36,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     private static final String[] DOCK_PACKAGE_MATCH = {
             "org.smarttube.stable",
             "com.vk.tv",
-            "byedpi",
+            "nova",
             "kinopoisk"
     };
 
@@ -57,10 +57,22 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         @Override
         public void onReceive(Context context, Intent intent) {
             loadApps();
-            if (gridRecycler.getAdapter() != null) gridRecycler.getAdapter().notifyDataSetChanged();
-            if (dockRecycler.getAdapter() != null) dockRecycler.getAdapter().notifyDataSetChanged();
+               gridApps.clear();
+        for (ResolveInfo r : all) {
+            String pkg = r.activityInfo.packageName;
+            String label = r.loadLabel(pm).toString();
+            
+            if (pkg.equals(getPackageName())) continue;
+            if (pkg.equals("com.example.user.myapplication")) continue;
+            if (isInDock(pkg)) continue;
+            
+            // ЖЕСТКИЙ ФИЛЬТР ПАЗЛА И СИСТЕМНОГО МУСОРА
+            if (pkg.contains("settings") || pkg.contains("documentsui") || pkg.contains("shell") || pkg.contains("packageinstaller")) continue;
+            if (label == null || label.trim().isEmpty() || label.equals("Puzzle")) continue;
+            if (r.activityInfo.getIconResource() == 0) continue;
+            
+            gridApps.add(mk(pm, r));
         }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
