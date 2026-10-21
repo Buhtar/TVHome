@@ -22,7 +22,6 @@ import android.widget.TextView;
 
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
@@ -171,13 +170,10 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             
             if (pkg.equals(getPackageName())) continue;
             if (pkg.equals("com.example.user.myapplication")) continue;
-            if (pkg.contains("settings")) continue;
             if (isInDock(pkg)) continue;
             
-            // Скрываем системный пазл и пустые иконки
-            if (pkg.equals("com.android.documentsui")) continue;
-            if (pkg.equals("com.android.shell")) continue;
-            if (pkg.equals("com.android.packageinstaller")) continue;
+            // Убираем пазл и системный мусор
+            if (pkg.contains("documentsui") || pkg.contains("shell") || pkg.contains("packageinstaller") || pkg.contains("settings")) continue;
             if (label == null || label.trim().isEmpty()) continue;
             if (r.activityInfo.getIconResource() == 0) continue;
             
@@ -196,14 +192,13 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     }
 
     private void setupGrid() {
-        // 5 КОЛОНОК В СЕТКЕ
         gridRecycler.setLayoutManager(new GridLayoutManager(this, 5));
         gridRecycler.setAdapter(new TileAdapter(this, gridApps, false, this));
     }
 
     private void setupDock() {
-        // ДОК ТЕПЕРЬ ГОРИЗОНТАЛЬНЫЙ СПИСОК (не растягивается)
-        dockRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        // Жестко задаем 4 колонки для дока
+        dockRecycler.setLayoutManager(new GridLayoutManager(this, 4));
         dockRecycler.setAdapter(new TileAdapter(this, dockApps, true, this));
     }
 

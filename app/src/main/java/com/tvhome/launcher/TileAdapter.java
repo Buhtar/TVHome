@@ -27,7 +27,7 @@ public class TileAdapter extends RecyclerView.Adapter<TileAdapter.VH> {
     private final List<AppInfo> items;
     private final boolean isDock;
     private final Listener listener;
-    private final int spanCount = 4;
+    private final int spanCount = 5;
 
     public TileAdapter(MainActivity ctx, List<AppInfo> items, boolean isDock, Listener l) {
         this.ctx = ctx;
@@ -48,7 +48,6 @@ public class TileAdapter extends RecyclerView.Adapter<TileAdapter.VH> {
         AppInfo info = items.get(position);
         h.icon.setImageDrawable(info.icon);
         
-        // Скрываем пустые названия, чтобы не было белых полосок
         if (info.label == null || info.label.trim().isEmpty()) {
             h.label.setVisibility(View.GONE);
         } else {
@@ -63,11 +62,11 @@ public class TileAdapter extends RecyclerView.Adapter<TileAdapter.VH> {
             v.animate().scaleX(hasFocus ? 1.08f : 1f).scaleY(hasFocus ? 1.08f : 1f)
                     .setDuration(180).start();
             
-            // Вместо плавающей рамки просто меняем фон иконки
+            // Рамка теперь применяется к контейнеру иконки
             if (hasFocus) {
-                v.setBackgroundResource(R.drawable.highlight_bg);
+                h.iconContainer.setBackgroundResource(R.drawable.highlight_bg);
             } else {
-                v.setBackground(null);
+                h.iconContainer.setBackground(null);
             }
 
             if (hasFocus) listener.onFocused(v, info, position, isDock);
@@ -96,7 +95,13 @@ public class TileAdapter extends RecyclerView.Adapter<TileAdapter.VH> {
     public int getItemCount() { return items.size(); }
 
     static class VH extends RecyclerView.ViewHolder {
+        View iconContainer;
         ImageView icon; TextView label;
-        VH(View v) { super(v); icon = v.findViewById(R.id.tile_icon); label = v.findViewById(R.id.tile_label); }
+        VH(View v) { 
+            super(v); 
+            iconContainer = v.findViewById(R.id.icon_container);
+            icon = v.findViewById(R.id.tile_icon); 
+            label = v.findViewById(R.id.tile_label); 
+        }
     }
 }
