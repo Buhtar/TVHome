@@ -57,10 +57,23 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         @Override
         public void onReceive(Context context, Intent intent) {
             loadApps();
-            if (gridRecycler.getAdapter() != null) gridRecycler.getAdapter().notifyDataSetChanged();
-            if (dockRecycler.getAdapter() != null) dockRecycler.getAdapter().notifyDataSetChanged();
+                  gridApps.clear();
+        for (ResolveInfo r : all) {
+            String pkg = r.activityInfo.packageName.toLowerCase(Locale.ROOT);
+            String label = r.loadLabel(pm).toString();
+            
+            if (pkg.equals(getPackageName())) continue;
+            if (pkg.equals("com.example.user.myapplication")) continue;
+            if (isInDock(pkg)) continue;
+            
+            // Расширенный фильтр мусора и пустых приложений
+            if (pkg.contains("settings") || pkg.contains("documentsui") || pkg.contains("shell") || pkg.contains("packageinstaller") || pkg.contains("provider")) continue;
+            if (label == null || label.trim().isEmpty() || label.equalsIgnoreCase("Puzzle") || label.equalsIgnoreCase("Files")) continue;
+            if (r.activityInfo.getIconResource() == 0) continue;
+            
+            gridApps.add(mk(pm, r));
         }
-    };
+        Collections.sort(gridApps, (a, b) -> a.label.compareToIgnoreCase(b.label));
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
