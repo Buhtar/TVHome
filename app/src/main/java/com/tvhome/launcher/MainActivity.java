@@ -34,7 +34,7 @@ import java.util.Locale;
 public class MainActivity extends Activity implements TileAdapter.Listener {
 
     private static final String[] DOCK_PACKAGE_MATCH = {
-            "org.smarttube.stable",
+            "youtube",
             "com.vk.tv",
             "nova", // Заменили byedpi на nova
             "kinopoisk"
