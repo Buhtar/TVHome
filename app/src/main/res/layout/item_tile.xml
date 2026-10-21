@@ -4,15 +4,15 @@
     android:layout_height="wrap_content"
     android:focusable="true"
     android:focusableInTouchMode="false"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="8dp">
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="@android:color/transparent">
 
     <FrameLayout
         android:id="@+id/icon_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
         android:padding="8dp">
 
         <ImageView
@@ -26,10 +26,11 @@
         android:id="@+id/tile_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:alpha="0"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textColor="@color/text_primary"
-        android:textSize="12sp"/>
+        android:layout_marginStart="16dp"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:shadowColor="#000000"
+        android:shadowDx="0"
+        android:shadowDy="2"
+        android:shadowRadius="6"/>
 </LinearLayout>

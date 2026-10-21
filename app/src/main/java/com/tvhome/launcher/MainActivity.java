@@ -21,7 +21,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.core.content.res.ResourcesCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
@@ -33,32 +33,22 @@ import java.util.Locale;
 
 public class MainActivity extends Activity implements TileAdapter.Listener {
 
-    private static final String[] DOCK_PACKAGE_MATCH = {
-            "com.google.android.youtube.tv",
-            "com.vk.tv",
-            "nova", // Заменили byedpi на nova
-            "kinopoisk"
-    };
-
     private FrameLayout root;
-    private RecyclerView gridRecycler, dockRecycler;
-    private TextView clock, date, greeting, focusedDockName;
+    private RecyclerView gridRecycler;
+    private TextView clock, date, greeting;
     private TextView pillInputs, pillWifi, pillSettings;
 
-    private final List<AppInfo> gridApps = new ArrayList<>();
-    private final List<AppInfo> dockApps = new ArrayList<>();
+    private final List<AppInfo> allApps = new ArrayList<>();
     private final List<View> topPills = new ArrayList<>();
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private SharedPreferences prefs;
-    private int lastGridPos = -1;
 
     private BroadcastReceiver packageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             loadApps();
             if (gridRecycler.getAdapter() != null) gridRecycler.getAdapter().notifyDataSetChanged();
-            if (dockRecycler.getAdapter() != null) dockRecycler.getAdapter().notifyDataSetChanged();
         }
     };
 
@@ -75,9 +65,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         clock = findViewById(R.id.clock);
         date = findViewById(R.id.date);
         greeting = findViewById(R.id.greeting);
-        focusedDockName = findViewById(R.id.focused_dock_name);
         gridRecycler = findViewById(R.id.grid);
-        dockRecycler = findViewById(R.id.dock);
         pillInputs = findViewById(R.id.pill_inputs);
         pillWifi = findViewById(R.id.pill_wifi);
         pillSettings = findViewById(R.id.pill_settings);
@@ -86,14 +74,11 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         applyFonts();
         loadApps();
         setupGrid();
-        setupDock();
         setupPills();
         startClock();
 
         gridRecycler.post(() -> {
-            int pos = prefs.getInt("last_grid_pos", 0);
-            if (gridRecycler.getChildAt(pos) != null) gridRecycler.getChildAt(pos).requestFocus();
-            else if (gridRecycler.getChildAt(0) != null) gridRecycler.getChildAt(0).requestFocus();
+            if (gridRecycler.getChildAt(0) != null) gridRecycler.getChildAt(0).requestFocus();
         });
     }
 
@@ -109,15 +94,12 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
 
         loadApps();
         if (gridRecycler.getAdapter() != null) gridRecycler.getAdapter().notifyDataSetChanged();
-        if (dockRecycler.getAdapter() != null) dockRecycler.getAdapter().notifyDataSetChanged();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        try {
-            unregisterReceiver(packageReceiver);
-        } catch (IllegalArgumentException e) { }
+        try { unregisterReceiver(packageReceiver); } catch (IllegalArgumentException e) { }
     }
 
     private void applyFonts() {
@@ -127,7 +109,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             clock.setTypeface(outfit);
             date.setTypeface(outfit);
             greeting.setTypeface(outfit);
-            focusedDockName.setTypeface(outfit);
         }
     }
 
@@ -149,56 +130,30 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             if (!dup) all.add(r);
         }
 
-        dockApps.clear();
-        for (String want : DOCK_PACKAGE_MATCH) {
-            AppInfo found = null;
-            for (ResolveInfo r : all) {
-                String pkg = r.activityInfo.packageName.toLowerCase(Locale.ROOT);
-                if (pkg.equals(getPackageName())) continue;
-                if (pkg.contains(want.toLowerCase(Locale.ROOT))) {
-                    found = mk(pm, r);
-                    break;
-                }
-            }
-            if (found != null) dockApps.add(found);
-        }
-
-        gridApps.clear();
+        allApps.clear();
         for (ResolveInfo r : all) {
             String pkg = r.activityInfo.packageName.toLowerCase(Locale.ROOT);
             String label = r.loadLabel(pm).toString();
             
             if (pkg.equals(getPackageName())) continue;
             if (pkg.equals("com.example.user.myapplication")) continue;
-            if (isInDock(pkg)) continue;
-            
-            // Расширенный фильтр мусора и пустых приложений
             if (pkg.contains("settings") || pkg.contains("documentsui") || pkg.contains("shell") || pkg.contains("packageinstaller") || pkg.contains("provider")) continue;
             if (label == null || label.trim().isEmpty() || label.equalsIgnoreCase("Puzzle") || label.equalsIgnoreCase("Files")) continue;
             if (r.activityInfo.getIconResource() == 0) continue;
             
-            gridApps.add(mk(pm, r));
+            allApps.add(mk(pm, r));
         }
-        Collections.sort(gridApps, (a, b) -> a.label.compareToIgnoreCase(b.label));
+        Collections.sort(allApps, (a, b) -> a.label.compareToIgnoreCase(b.label));
     }
 
     private AppInfo mk(PackageManager pm, ResolveInfo r) {
         return new AppInfo(r.activityInfo.packageName, r.loadLabel(pm).toString(), r.loadIcon(pm));
     }
 
-    private boolean isInDock(String pkg) {
-        for (AppInfo a : dockApps) if (a.packageName.equalsIgnoreCase(pkg)) return true;
-        return false;
-    }
-
     private void setupGrid() {
-        gridRecycler.setLayoutManager(new GridLayoutManager(this, 5));
-        gridRecycler.setAdapter(new TileAdapter(this, gridApps, false, this));
-    }
-
-    private void setupDock() {
-        dockRecycler.setLayoutManager(new GridLayoutManager(this, 4));
-        dockRecycler.setAdapter(new TileAdapter(this, dockApps, true, this));
+        // Вертикальный список (лента)
+        gridRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        gridRecycler.setAdapter(new TileAdapter(this, allApps, this));
     }
 
     private void setupPills() {
@@ -217,7 +172,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             p.setOnKeyListener((v, keyCode, event) -> {
                 if (event.getAction() != android.view.KeyEvent.ACTION_DOWN) return false;
                 if (keyCode == android.view.KeyEvent.KEYCODE_DPAD_DOWN) {
-                    View d = dockRecycler.getChildAt(0);
+                    View d = gridRecycler.getChildAt(0);
                     if (d != null) { d.requestFocus(); return true; }
                 }
                 return false;
@@ -272,35 +227,8 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         } catch (Exception ignored) { }
     }
 
-    @Override public void onFocused(View tile, AppInfo info, int pos, boolean isDock) {
-        if (isDock) {
-            focusedDockName.setText(info.label);
-            focusedDockName.setAlpha(1f);
-            focusedDockName.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        } else {
-            focusedDockName.setAlpha(0f);
-            lastGridPos = pos;
-            prefs.edit().putInt("last_grid_pos", pos).apply();
-        }
-    }
-
-    @Override public void onUpFromGridFirstRow() {
-        if (!topPills.isEmpty()) topPills.get(0).requestFocus();
-    }
-
-    @Override public void onDownFromGridLastRow() {
-        View d = dockRecycler.getChildAt(0);
-        if (d != null) d.requestFocus();
-    }
-
-    @Override public void onUpFromDock() {
-        if (!topPills.isEmpty()) topPills.get(0).requestFocus();
-    }
-
-    @Override public void onDownFromDock() {
-        View g = gridRecycler.getChildAt(Math.max(0, lastGridPos));
-        if (g == null) g = gridRecycler.getChildAt(0);
-        if (g != null) g.requestFocus();
+    @Override public void onFocused(View tile, AppInfo info, int pos) {
+        // При фокусе на приложении ничего дополнительно делать не нужно
     }
 
     @Override protected void onDestroy() { super.onDestroy(); handler.removeCallbacksAndMessages(null); }
