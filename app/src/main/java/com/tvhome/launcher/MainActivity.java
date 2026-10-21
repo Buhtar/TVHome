@@ -36,7 +36,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     private static final String[] DOCK_PACKAGE_MATCH = {
             "org.smarttube.stable",
             "com.vk.tv",
-            "nova",
+            "nova", // Заменили byedpi на nova
             "kinopoisk"
     };
 
@@ -57,23 +57,10 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         @Override
         public void onReceive(Context context, Intent intent) {
             loadApps();
-                  gridApps.clear();
-        for (ResolveInfo r : all) {
-            String pkg = r.activityInfo.packageName.toLowerCase(Locale.ROOT);
-            String label = r.loadLabel(pm).toString();
-            
-            if (pkg.equals(getPackageName())) continue;
-            if (pkg.equals("com.example.user.myapplication")) continue;
-            if (isInDock(pkg)) continue;
-            
-            // Расширенный фильтр мусора и пустых приложений
-            if (pkg.contains("settings") || pkg.contains("documentsui") || pkg.contains("shell") || pkg.contains("packageinstaller") || pkg.contains("provider")) continue;
-            if (label == null || label.trim().isEmpty() || label.equalsIgnoreCase("Puzzle") || label.equalsIgnoreCase("Files")) continue;
-            if (r.activityInfo.getIconResource() == 0) continue;
-            
-            gridApps.add(mk(pm, r));
+            if (gridRecycler.getAdapter() != null) gridRecycler.getAdapter().notifyDataSetChanged();
+            if (dockRecycler.getAdapter() != null) dockRecycler.getAdapter().notifyDataSetChanged();
         }
-        Collections.sort(gridApps, (a, b) -> a.label.compareToIgnoreCase(b.label));
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -178,15 +165,16 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
 
         gridApps.clear();
         for (ResolveInfo r : all) {
-            String pkg = r.activityInfo.packageName;
+            String pkg = r.activityInfo.packageName.toLowerCase(Locale.ROOT);
             String label = r.loadLabel(pm).toString();
             
             if (pkg.equals(getPackageName())) continue;
             if (pkg.equals("com.example.user.myapplication")) continue;
             if (isInDock(pkg)) continue;
             
-            if (pkg.contains("settings") || pkg.contains("documentsui") || pkg.contains("shell") || pkg.contains("packageinstaller")) continue;
-            if (label == null || label.trim().isEmpty() || label.equals("Puzzle")) continue;
+            // Расширенный фильтр мусора и пустых приложений
+            if (pkg.contains("settings") || pkg.contains("documentsui") || pkg.contains("shell") || pkg.contains("packageinstaller") || pkg.contains("provider")) continue;
+            if (label == null || label.trim().isEmpty() || label.equalsIgnoreCase("Puzzle") || label.equalsIgnoreCase("Files")) continue;
             if (r.activityInfo.getIconResource() == 0) continue;
             
             gridApps.add(mk(pm, r));
