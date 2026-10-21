@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
@@ -36,7 +37,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     private static final String[] DOCK_PACKAGE_MATCH = {
             "org.smarttube.stable",
             "com.vk.tv",
-            "com.brent.nova",
+            "byedpi",
             "kinopoisk"
     };
 
@@ -173,14 +174,12 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             if (pkg.contains("settings")) continue;
             if (isInDock(pkg)) continue;
             
+            // Скрываем системный пазл и пустые иконки
+            if (pkg.equals("com.android.documentsui")) continue;
+            if (pkg.equals("com.android.shell")) continue;
+            if (pkg.equals("com.android.packageinstaller")) continue;
             if (label == null || label.trim().isEmpty()) continue;
             if (r.activityInfo.getIconResource() == 0) continue;
-            if (label.equalsIgnoreCase("com.android.documentsui") || 
-                label.equalsIgnoreCase("Shell") || 
-                label.equalsIgnoreCase("Package installer") ||
-                label.contains("Настройки")) {
-                continue;
-            }
             
             gridApps.add(mk(pm, r));
         }
@@ -197,12 +196,14 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     }
 
     private void setupGrid() {
-        gridRecycler.setLayoutManager(new GridLayoutManager(this, 4));
+        // 5 КОЛОНОК В СЕТКЕ
+        gridRecycler.setLayoutManager(new GridLayoutManager(this, 5));
         gridRecycler.setAdapter(new TileAdapter(this, gridApps, false, this));
     }
 
     private void setupDock() {
-        dockRecycler.setLayoutManager(new GridLayoutManager(this, 4));
+        // ДОК ТЕПЕРЬ ГОРИЗОНТАЛЬНЫЙ СПИСОК (не растягивается)
+        dockRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         dockRecycler.setAdapter(new TileAdapter(this, dockApps, true, this));
     }
 

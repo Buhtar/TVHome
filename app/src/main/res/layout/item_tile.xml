@@ -9,11 +9,12 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <ImageView
+        <ImageView
         android:id="@+id/tile_icon"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:scaleType="fitCenter"/>
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:scaleType="centerInside"
+        android:adjustViewBounds="true"/>
 
     <TextView
         android:id="@+id/tile_label"
