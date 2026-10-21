@@ -5,9 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.Typeface;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -40,9 +37,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
 
     private final List<AppInfo> allApps = new ArrayList<>();
     private final List<View> topPills = new ArrayList<>();
-
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private SharedPreferences prefs;
 
     private BroadcastReceiver packageReceiver = new BroadcastReceiver() {
         @Override
@@ -55,8 +50,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
         getWindow().setStatusBarColor(0);
         getWindow().setNavigationBarColor(0);
@@ -69,7 +63,6 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
         pillInputs = findViewById(R.id.pill_inputs);
         pillWifi = findViewById(R.id.pill_wifi);
         pillSettings = findViewById(R.id.pill_settings);
-        prefs = getSharedPreferences("tvhome", MODE_PRIVATE);
 
         applyFonts();
         loadApps();
@@ -119,19 +112,19 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     }
 
     private void loadApps() {
-        PackageManager pm = getPackageManager();
-        List<ResolveInfo> all = new ArrayList<>();
+        android.content.pm.PackageManager pm = getPackageManager();
+        List<android.content.pm.ResolveInfo> all = new ArrayList<>();
         Intent lean = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
         all.addAll(pm.queryIntentActivities(lean, 0));
         Intent reg = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
-        for (ResolveInfo r : pm.queryIntentActivities(reg, 0)) {
+        for (android.content.pm.ResolveInfo r : pm.queryIntentActivities(reg, 0)) {
             boolean dup = false;
-            for (ResolveInfo e : all) if (e.activityInfo.packageName.equals(r.activityInfo.packageName)) { dup = true; break; }
+            for (android.content.pm.ResolveInfo e : all) if (e.activityInfo.packageName.equals(r.activityInfo.packageName)) { dup = true; break; }
             if (!dup) all.add(r);
         }
 
         allApps.clear();
-        for (ResolveInfo r : all) {
+        for (android.content.pm.ResolveInfo r : all) {
             String pkg = r.activityInfo.packageName.toLowerCase(Locale.ROOT);
             String label = r.loadLabel(pm).toString();
             
@@ -141,18 +134,14 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
             if (label == null || label.trim().isEmpty() || label.equalsIgnoreCase("Puzzle") || label.equalsIgnoreCase("Files")) continue;
             if (r.activityInfo.getIconResource() == 0) continue;
             
-            allApps.add(mk(pm, r));
+            allApps.add(new AppInfo(r.activityInfo.packageName, label, r.loadIcon(pm)));
         }
         Collections.sort(allApps, (a, b) -> a.label.compareToIgnoreCase(b.label));
     }
 
-    private AppInfo mk(PackageManager pm, ResolveInfo r) {
-        return new AppInfo(r.activityInfo.packageName, r.loadLabel(pm).toString(), r.loadIcon(pm));
-    }
-
     private void setupGrid() {
-        // Вертикальный список (лента)
-        gridRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        // Горизонтальная лента
+        gridRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         gridRecycler.setAdapter(new TileAdapter(this, allApps, this));
     }
 
@@ -228,7 +217,7 @@ public class MainActivity extends Activity implements TileAdapter.Listener {
     }
 
     @Override public void onFocused(View tile, AppInfo info, int pos) {
-        // При фокусе на приложении ничего дополнительно делать не нужно
+        // При фокусе ничего дополнительно делать не нужно
     }
 
     @Override protected void onDestroy() { super.onDestroy(); handler.removeCallbacksAndMessages(null); }

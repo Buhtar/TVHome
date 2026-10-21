@@ -33,7 +33,11 @@
                     android:layout_height="wrap_content"
                     android:textColor="#B3FFFFFF"
                     android:textSize="14sp"
-                    android:letterSpacing="0.05"/>
+                    android:letterSpacing="0.05"
+                    android:shadowColor="#000000"
+                    android:shadowDx="0"
+                    android:shadowDy="2"
+                    android:shadowRadius="4"/>
 
                 <TextView
                     android:id="@+id/clock"
@@ -53,7 +57,11 @@
                     android:layout_height="wrap_content"
                     android:textColor="#B3FFFFFF"
                     android:textSize="16sp"
-                    android:letterSpacing="0.05"/>
+                    android:letterSpacing="0.05"
+                    android:shadowColor="#000000"
+                    android:shadowDx="0"
+                    android:shadowDy="2"
+                    android:shadowRadius="4"/>
             </LinearLayout>
 
             <LinearLayout
@@ -101,7 +109,7 @@
         </FrameLayout>
     </LinearLayout>
 
-    <!-- Вертикальная лента приложений (прижата вниз) -->
+    <!-- Горизонтальный док внизу -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/grid"
         android:layout_width="match_parent"
@@ -110,7 +118,7 @@
         android:clipToPadding="false"
         android:clipChildren="false"
         android:paddingHorizontal="40dp"
-        android:paddingBottom="60dp"
+        android:paddingBottom="48dp"
         android:paddingTop="40dp"/>
 
 </FrameLayout>

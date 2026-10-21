@@ -1,6 +1,5 @@
 package com.tvhome.launcher;
 
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,19 +44,20 @@ public class TileAdapter extends RecyclerView.Adapter<TileAdapter.VH> {
         h.itemView.setOnClickListener(v -> listener.onClick(info));
         
         h.itemView.setOnFocusChangeListener((v, hasFocus) -> {
-            // Увеличение в 1.3 раза при фокусе
+            // Увеличение иконки
             v.animate().scaleX(hasFocus ? 1.3f : 1f).scaleY(hasFocus ? 1.3f : 1f)
                     .setDuration(200).start();
             
-            // Подсветка фона
-            if (hasFocus) {
-                v.setBackgroundResource(R.drawable.pill_bg); // Используем стеклянную подложку
-                v.bringToFront();
-            } else {
-                v.setBackground(null);
-            }
+            // Показываем/скрываем текст
+            h.label.setAlpha(hasFocus ? 1f : 0f);
+            
+            // Полностью прозрачный фон (ничего не применяем)
+            v.setBackground(null);
 
-            if (hasFocus) listener.onFocused(v, info, position);
+            if (hasFocus) {
+                v.bringToFront(); // Чтобы увеличенная иконка не обрезалась соседями
+                listener.onFocused(v, info, position);
+            }
         });
     }
 
